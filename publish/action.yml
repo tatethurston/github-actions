@@ -1,0 +1,23 @@
+name: Publish NPM Package
+description: Publishes a package to npm
+inputs:
+  package_directory:
+    description: The directory to publish from
+    required: true
+  npm_token:
+    description: The NPM token for publishing
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: tatethurston/github-actions/build@main
+    - run: |
+        cd "${{ inputs.package_directory }}"
+        if [ "${{ github.event.release.prerelease }}" = "true" ]; then
+          npm publish --tag next 
+        else
+          npm publish
+        fi
+      shell: bash
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.npm_token }}

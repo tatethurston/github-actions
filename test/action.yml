@@ -1,0 +1,14 @@
+name: Lint and Test
+description: Lint and Test
+inputs:
+  codecov_token:
+    description: The codecov token for coverage tracking
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: tatethurston/github-actions/build@main
+    - run: pnpm lint
+      shell: bash
+    - run: pnpm test:ci && pnpm codecov --token=${{ inputs.codecov_token }}
+      shell: bash
