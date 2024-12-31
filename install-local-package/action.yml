@@ -1,0 +1,16 @@
+name: Install Local Package
+description: Install a locally published NPM package
+inputs:
+  name:
+    description: The name of the NPM artifact
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.name }}
+    - uses: actions/setup-node@v3
+    - run: |
+        npm install package.tgz
+      shell: bash

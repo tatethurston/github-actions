@@ -1,0 +1,27 @@
+name: Publish Local Package
+description: Build and store a local NPM package
+inputs:
+  path:
+    description: The directory to package from
+    required: true
+outputs:
+  package:
+    description: The name of the uploaded NPM package
+    value: package-${{ github.event.pull_request.number }}
+runs:
+  using: composite
+  steps:
+    - uses: tatethurston/github-actions/build@main
+    - name: NPM Pack
+      run: |
+        cd ${{ inputs.path }}
+        pnpm pack
+        mv *.tgz package.tgz
+      shell: bash
+    - uses: actions/upload-artifact@v4
+      with:
+        if-no-files-found: error
+        name: package-${{ github.event.pull_request.number }}
+        overwrite: true
+        path: ${{ inputs.path }}/package.tgz
+        retention-days: 1

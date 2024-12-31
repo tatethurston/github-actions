@@ -1,5 +1,5 @@
 name: Publish NPM Package
-description: Publishes a package to npm
+description: Publishes a package to NPM
 inputs:
   package_directory:
     description: The directory to publish from

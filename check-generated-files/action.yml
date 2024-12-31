@@ -1,0 +1,22 @@
+name: Check Generated Files
+description: Check for uncommited changes to generated files
+inputs:
+  cmd:
+    description: The command to run to regenerate files
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: tatethurston/github-actions/build@main
+    - run: |
+        ${{ inputs.cmd }}
+        if git diff --quiet; then
+          echo "No changes detected."
+        else
+          echo "Changes detected:"
+          git diff --name-only
+          git diff
+          echo "Failing build."
+          exit 1
+        fi
+      shell: bash
