@@ -15,7 +15,7 @@ runs:
     - name: NPM Pack
       run: |
         cd ${{ inputs.path }}
-        pnpm pack
+        npm pack
         mv *.tgz package.tgz
       shell: bash
     - uses: actions/upload-artifact@v4
