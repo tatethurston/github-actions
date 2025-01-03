@@ -1,5 +1,5 @@
-name: Build NPM Package
-description: Builds an npm package
+name: Build
+description: Builds the local workspace
 runs:
   using: composite
   steps:
