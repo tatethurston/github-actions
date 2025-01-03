@@ -7,7 +7,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: tatethurston/github-actions/build@main
     - run: |
         ${{ inputs.cmd }}
         if git diff --quiet; then
