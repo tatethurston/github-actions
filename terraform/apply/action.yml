@@ -1,0 +1,35 @@
+name: Terraform Apply
+description: Applies previously saved Terraform plan
+inputs:
+  aws-s3-bucket:
+    description: The AWS S3 bucket to store Terraform state
+    required: true
+  directory:
+    description: The directory with Terraform to manage
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+    - uses: hashicorp/setup-terraform@v3
+
+    # init
+    - name: terraform init
+      run: terraform init
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+
+    # download plan
+    - name: Download tfplan from AWS S3
+      run: |
+        aws s3 cp "s3://${{ inputs.aws-s3-bucket }}/plans/${{ github.repository }}/${{ github.event.pull_request.number }}" tfplan
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+
+    # apply
+    - name: terraform apply
+      env:
+        TF_LOG: INFO
+      run: terraform apply -auto-approve -input=false tfplan
+      shell: bash
+      working-directory: ${{ inputs.directory }}

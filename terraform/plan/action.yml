@@ -1,0 +1,79 @@
+name: Terraform Plan
+description: Creates and persists a Terraform plan
+inputs:
+  aws-s3-bucket:
+    description: The AWS S3 bucket to store Terraform state
+    required: true
+  directory:
+    description: The directory with Terraform to manage
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+    - uses: hashicorp/setup-terraform@v3
+
+    # init
+    - name: terraform init
+      run: terraform init
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+
+    # lint, fmt and validate
+    - uses: terraform-linters/setup-tflint@v4
+      with:
+        tflint_version: latest
+    - name: tflint init
+      run: tflint --init
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+    - name: tflint
+      run: tflint --format compact --recursive
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+    - name: terraform fmt
+      run: terraform fmt -check -recursive
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+    - name: terraform validate
+      run: terraform validate -no-color
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+
+    # plan
+    - name: terraform plan
+      id: plan
+      run: terraform plan -input=false -no-color -out=tfplan && terraform show -no-color tfplan
+      env:
+        TF_LOG: INFO
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+    # display plan
+    - uses: actions/github-script@v7
+      env:
+        PLAN: ${{ steps.plan.outputs.stdout }}
+      with:
+        script: |
+          const body = `\
+          #### Terraform Plan 📖
+
+          <details><summary>Show Plan</summary><br>
+
+          \`\`\`
+          ${process.env.PLAN}
+          \`\`\`
+
+          </details>`;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body
+          });
+    # upload plan
+    - name: Store tfplan to AWS S3
+      run: |
+        aws s3 cp tfplan "s3://${{ inputs.aws-s3-bucket }}/plans/${{ github.repository }}/${{ github.event.pull_request.number }}"
+      shell: bash
+      working-directory: ${{ inputs.directory }}
