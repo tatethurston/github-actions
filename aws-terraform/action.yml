@@ -1,0 +1,40 @@
+name: AWS Terraform
+description: "AWS Terraform Setup"
+inputs:
+  directory:
+    description: "The directory with Terraform to manage"
+    required: true
+  aws-region:
+    description: "The AWS region"
+    required: true
+  role-to-assume:
+    description: "The AWS role to assume"
+    required: true
+  role-session-name:
+    description: "The role session name"
+    required: true
+runs:
+  using: composite
+  steps:
+    # AWS Credentials
+    - name: Assume AWS Github-Action Role
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ inputs.aws-region }}
+        role-to-assume: ${{ inputs.role-to-assume }}
+        role-session-name: ${{ inputs.role-session-name }}
+    - name: Export AWS Credentials
+      shell: bash
+      run: |
+        sts_output=$(aws sts get-caller-identity) 
+        export AWS_ACCESS_KEY_ID=$(echo $sts_output | jq -r .Credentials.AccessKeyId)
+        export AWS_SECRET_ACCESS_KEY=$(echo $sts_output | jq -r .Credentials.SecretAccessKey)
+        export AWS_SESSION_TOKEN=$(echo $sts_output | jq -r .Credentials.SessionToken)
+
+    # Terraform Init
+    - uses: hashicorp/setup-terraform@v3
+    - name: terraform init
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+      id: init
+      run: terraform init
