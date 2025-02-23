@@ -3,14 +3,13 @@ description: Builds the local workspace
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
+    - uses: actions/checkout@v4
+    - uses: pnpm/action-setup@v4
+    - uses: actions/setup-node@v4
       with:
         node-version-file: .nvmrc
         cache: pnpm
         registry-url: https://registry.npmjs.org
-    - run: corepack enable
-      shell: bash
     - run: pnpm install --frozen-lockfile
       shell: bash
     - run: pnpm build
